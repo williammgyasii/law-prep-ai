@@ -9,11 +9,11 @@ import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DifficultyBadge, TypeBadge, StatusBadge } from "@/components/status-badge";
-import { ResourceProgressControls } from "@/components/resource-progress-controls";
-import { AISidebar } from "@/components/ai-sidebar";
-import { AutoProgress } from "@/components/auto-progress";
-import { LawHubEmbed } from "@/components/lawhub-embed";
+import { DifficultyBadge, TypeBadge, StatusBadge } from "@/components/shared/status-badge";
+import { ResourceProgressControls } from "@/components/resources/resource-progress-controls";
+import { AISidebar } from "@/components/resources/ai-sidebar";
+import { AutoProgress } from "@/components/resources/auto-progress";
+import { LawHubEmbed } from "@/components/resources/lawhub-embed";
 
 async function getResourceData(id: string) {
   return db.query.resources.findFirst({

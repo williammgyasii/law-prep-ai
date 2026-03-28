@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Plus, Loader2, Trash2 } from "lucide-react";
-import { DynamicIcon } from "@/components/icons";
+import { DynamicIcon } from "@/components/shared/icons";
 import { MODULE_ICONS, MODULE_COLORS } from "@/lib/constants";
 
 interface ModuleFormProps {

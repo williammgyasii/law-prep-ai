@@ -1,6 +1,6 @@
 import { Zap } from "lucide-react";
 import { getQuestionCounts, getPracticeStats, getAvailablePrepTests } from "@/actions/practice";
-import { PracticeSession } from "@/components/practice-session";
+import { PracticeSession } from "@/components/practice/practice-session";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

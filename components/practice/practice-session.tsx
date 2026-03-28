@@ -24,15 +24,15 @@ import {
   PenLine,
 } from "lucide-react";
 import Link from "next/link";
-import { PracticeQuestionCard } from "@/components/practice-question";
-import { PracticeResults } from "@/components/practice-results";
+import { PracticeQuestionCard } from "@/components/practice/practice-question";
+import { PracticeResults } from "@/components/practice/practice-results";
 import {
   getPracticeQuestions,
   submitAnswer,
   type SectionType,
 } from "@/actions/practice";
 import type { PracticeQuestion } from "@/db/schema";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 import type { Tier } from "@/lib/tiers";
 
 interface AttemptResult {

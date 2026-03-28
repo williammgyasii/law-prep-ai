@@ -14,10 +14,9 @@ function logUploadError(stage: string, detail: Record<string, unknown>, err: unk
 }
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  const pdfParse = await import("pdf-parse");
-  const parse = typeof pdfParse === "function" ? pdfParse : (pdfParse as any).default ?? pdfParse;
-  const data = await parse(buffer);
-  return data.text;
+  const { extractText } = await import("unpdf");
+  const result = await extractText(new Uint8Array(buffer));
+  return result.text.join("\n");
 }
 
 async function extractTextFromDOCX(buffer: Buffer): Promise<string> {

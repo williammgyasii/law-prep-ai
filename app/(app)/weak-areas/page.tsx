@@ -3,9 +3,9 @@ import { weakAreas, modules } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import { AlertTriangle } from "lucide-react";
-import { WeakAreaForm } from "@/components/weak-area-form";
-import { WeakAreaCard } from "@/components/weak-area-card";
-import { EmptyState } from "@/components/empty-state";
+import { WeakAreaForm } from "@/components/weak-areas/weak-area-form";
+import { WeakAreaCard } from "@/components/weak-areas/weak-area-card";
+import { EmptyState } from "@/components/shared/empty-state";
 
 async function getData() {
   const sessionUser = await getSessionUser();

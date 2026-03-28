@@ -6,9 +6,9 @@ import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Sparkles } from "lucide-react";
-import { StudyPlanForm } from "@/components/study-plan-form";
-import { EmptyState } from "@/components/empty-state";
-import { DeletePlanButton } from "@/components/delete-plan-button";
+import { StudyPlanForm } from "@/components/study/study-plan-form";
+import { EmptyState } from "@/components/shared/empty-state";
+import { DeletePlanButton } from "@/components/study/delete-plan-button";
 
 async function getPlans() {
   const user = await getSessionUser();

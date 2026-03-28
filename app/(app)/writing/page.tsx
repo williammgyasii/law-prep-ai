@@ -1,8 +1,8 @@
 import { PenLine } from "lucide-react";
 import { getWritingPrompts, getWritingStats, getWritingAttempts } from "@/actions/writing";
-import { WritingHub } from "@/components/writing-hub";
+import { WritingHub } from "@/components/writing/writing-hub";
 import { Badge } from "@/components/ui/badge";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 import type { Tier } from "@/lib/tiers";
 
 export default async function WritingPage() {

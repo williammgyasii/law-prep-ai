@@ -23,7 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DynamicIcon } from "@/components/icons";
+import { DynamicIcon } from "@/components/shared/icons";
 import { getUserTier } from "@/lib/subscription";
 import { TIERS, type Tier } from "@/lib/tiers";
 

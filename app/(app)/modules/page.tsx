@@ -10,9 +10,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DynamicIcon } from "@/components/icons";
-import { EmptyState } from "@/components/empty-state";
-import { UpgradePrompt } from "@/components/upgrade-prompt";
+import { DynamicIcon } from "@/components/shared/icons";
+import { EmptyState } from "@/components/shared/empty-state";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 
 async function getModulesData() {
   return db.query.modules.findMany({

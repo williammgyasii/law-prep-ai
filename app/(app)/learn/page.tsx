@@ -1,6 +1,5 @@
-import { Suspense } from "react";
 import { getUserDocuments, getDocumentLimits } from "@/actions/learn";
-import { LearnWorkspace } from "@/components/learn/learn-workspace";
+import { DocumentLibrary } from "@/components/learn/document-library";
 
 export default async function LearnPage() {
   const [docs, limits] = await Promise.all([
@@ -9,11 +8,9 @@ export default async function LearnPage() {
   ]);
 
   return (
-    <Suspense fallback={<div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading workspace...</div>}>
-      <LearnWorkspace
-        initialDocuments={docs}
-        limits={limits}
-      />
-    </Suspense>
+    <DocumentLibrary
+      initialDocuments={docs}
+      limits={limits}
+    />
   );
 }

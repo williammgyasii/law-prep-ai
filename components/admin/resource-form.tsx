@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, Trash2, ExternalLink } from "lucide-react";
 import { RESOURCE_TYPES, DIFFICULTIES } from "@/lib/constants";
-import { DifficultyBadge, TypeBadge } from "@/components/status-badge";
+import { DifficultyBadge, TypeBadge } from "@/components/shared/status-badge";
 
 interface ResourceFormProps {
   modules: { id: string; title: string }[];

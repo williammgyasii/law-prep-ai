@@ -26,9 +26,15 @@ law-prep-ai/
 ├── actions/                 # Server actions grouped by domain
 ├── components/
 │   ├── ui/                  # Shadcn primitives (button, card, dialog, etc.)
+│   ├── admin/               # Admin-specific components (module-form, resource-form)
+│   ├── layout/              # App shell (app-sidebar, top-bar)
 │   ├── learn/               # Learning Hub workspace components
-│   ├── admin/               # Admin-specific components
-│   └── *.tsx                # PROBLEM: flat dumping ground for everything else
+│   ├── practice/            # Practice session, question, results
+│   ├── resources/           # Resource detail page components (ai-sidebar, lawhub-embed, etc.)
+│   ├── shared/              # Cross-domain reusable (empty-state, icons, status-badge, upgrade-prompt, stat-card)
+│   ├── study/               # Study planner components (study-plan-form, delete-plan-button)
+│   ├── weak-areas/          # Weak areas components (weak-area-card, weak-area-form)
+│   └── writing/             # LSAT Writing components (writing-hub, writing-session)
 ├── db/
 │   ├── schema.ts            # Drizzle schema + relations + ALL inferred types
 │   ├── index.ts             # DB connection
@@ -45,23 +51,16 @@ law-prep-ai/
 └── scripts/                 # One-off data scripts (scraping, seeding)
 ```
 
-## Known Issues You Must Fix Over Time
+## Known Issues (Remaining Debt)
 
-1. **Flat components folder**: ~25 `.tsx` files dumped directly in `components/`. They should be grouped by domain:
-   - `components/practice/` → practice-session.tsx, practice-question.tsx, practice-results.tsx
-   - `components/writing/` → writing-hub.tsx, writing-session.tsx
-   - `components/study/` → study-plan-form.tsx, delete-plan-button.tsx
-   - `components/shared/` → stat-card.tsx, status-badge.tsx, empty-state.tsx, icons.tsx, upgrade-prompt.tsx
-   - `components/layout/` → app-sidebar.tsx, top-bar.tsx, ai-sidebar.tsx, ai-panel.tsx
-
-2. **Types scattered everywhere**: Types are defined in schema.ts, actions files, component files, and lib files. They should be consolidated:
+1. **Types scattered across files**: Types are defined in schema.ts, actions files, component files, and lib files. They should be consolidated:
    - `db/schema.ts` → Only Drizzle table definitions, relations, and `$inferSelect` types
    - `lib/types/` → Domain-specific types that aren't Drizzle-inferred (e.g. `PracticeFilters`, `ChatMessage`, `WorkspaceLimits`, `SectionType`)
    - Component files → Only component-local prop interfaces
 
-3. **Duplicate/dead code**: `document-chat.tsx` and `document-upload.tsx` in root components/ are superseded by `components/learn/` equivalents. `ai-sidebar.tsx` and `ai-panel.tsx` may overlap.
+2. **Schema file is 460+ lines**: The `WritingPerspective` and `PrewritingQuestion` interfaces belong in a types file, not in the schema.
 
-4. **Schema file is 460+ lines**: The `WritingPerspective` and `PrewritingQuestion` interfaces belong in a types file, not in the schema.
+3. **`components/resources/note-editor.tsx`** is unused (superseded by ai-sidebar's inline notes). Can be removed when confirmed.
 
 ## Rules for Every New Feature
 
@@ -140,6 +139,6 @@ When invoked before a new feature:
    - Imports server code in a client component
    - Duplicates existing functionality
 
-4. **Suggest refactoring** if the feature touches an area with existing debt (e.g. "While adding this practice feature, move `practice-session.tsx`, `practice-question.tsx`, and `practice-results.tsx` into `components/practice/`").
+4. **Suggest refactoring** if the feature touches an area with existing debt (e.g. "While adding this feature, extract shared types into `lib/types/<domain>.ts`").
 
 5. **Return the spec** for the implementing agent to follow. Be concise — just the file map and any flags. No essays.

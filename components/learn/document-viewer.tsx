@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
-  FileText,
-  Globe,
+  ArrowLeft,
   ExternalLink,
   Sparkles,
   ListChecks,
@@ -12,8 +12,6 @@ import {
   Trash2,
   Loader2,
   RefreshCw,
-  Upload,
-  BookOpen,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +25,7 @@ import {
   quizFromDocument,
 } from "@/actions/learn";
 import type { Document } from "@/db/schema";
-import type { DocumentWithChats } from "./learn-workspace";
+import type { DocumentWithChats } from "./document-workspace";
 
 interface DocumentViewerProps {
   document: Document | null;
@@ -74,26 +72,8 @@ export function DocumentViewer({ document, documentDetail, loading, onDeleted }:
 
   if (!doc) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <BookOpen className="w-8 h-8 text-primary/40" />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold">Learning Hub</h3>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            Select a document from the left panel or upload a new one to start studying with AI assistance.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 mt-2">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Upload className="w-3.5 h-3.5" />
-            Upload PDFs, DOCX, or URLs
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Sparkles className="w-3.5 h-3.5" />
-            AI summaries & flashcards
-          </div>
-        </div>
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -149,6 +129,11 @@ export function DocumentViewer({ document, documentDetail, loading, onDeleted }:
     <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
       {/* Document header */}
       <div className="px-4 py-3 border-b border-border/50 flex items-center gap-3">
+        <Button asChild variant="ghost" size="icon" className="rounded-xl shrink-0 h-8 w-8">
+          <Link href="/learn">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+        </Button>
         <div className="flex-1 min-w-0">
           <h2 className="text-sm font-semibold truncate">{doc.title}</h2>
           <div className="flex items-center gap-2 mt-0.5">

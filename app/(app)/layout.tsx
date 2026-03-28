@@ -1,5 +1,5 @@
-import { AppSidebar } from "@/components/app-sidebar";
-import { TopBar } from "@/components/top-bar";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { TopBar } from "@/components/layout/top-bar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { auth } from "@/auth";
 

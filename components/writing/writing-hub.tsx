@@ -15,7 +15,7 @@ import {
   BarChart3,
   CalendarDays,
 } from "lucide-react";
-import { WritingSession } from "@/components/writing-session";
+import { WritingSession } from "@/components/writing/writing-session";
 import type { WritingPrompt, WritingAttempt } from "@/db/schema";
 
 interface WritingHubProps {

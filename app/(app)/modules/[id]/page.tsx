@@ -11,9 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DynamicIcon } from "@/components/icons";
-import { StatusBadge, DifficultyBadge, TypeBadge } from "@/components/status-badge";
-import { EmptyState } from "@/components/empty-state";
+import { DynamicIcon } from "@/components/shared/icons";
+import { StatusBadge, DifficultyBadge, TypeBadge } from "@/components/shared/status-badge";
+import { EmptyState } from "@/components/shared/empty-state";
 
 async function getModuleData(id: string) {
   return db.query.modules.findFirst({

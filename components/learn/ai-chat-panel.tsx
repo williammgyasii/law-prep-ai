@@ -21,12 +21,6 @@ interface AiChatPanelProps {
   aiMessagesLimit: number;
 }
 
-const GENERAL_PROMPTS = [
-  "How should I study for the LSAT?",
-  "What are the LSAT sections?",
-  "Tips for logical reasoning?",
-];
-
 const DOC_PROMPTS = [
   "Summarize the key arguments",
   "What are the main holdings?",
@@ -113,7 +107,7 @@ export function AiChatPanel({
     }
   }, [input, sending, documentId, isLimited, remaining]);
 
-  const prompts = documentId ? DOC_PROMPTS : GENERAL_PROMPTS;
+  const prompts = DOC_PROMPTS;
 
   return (
     <div className="flex flex-col h-full">
@@ -125,13 +119,11 @@ export function AiChatPanel({
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-sm font-semibold">AI Assistant</span>
-            {documentTitle ? (
+            {documentTitle && (
               <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
                 <FileText className="w-2.5 h-2.5 shrink-0" />
                 {documentTitle}
               </p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground">Select a document to chat</p>
             )}
           </div>
           {isLimited && documentId && (
@@ -148,26 +140,22 @@ export function AiChatPanel({
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-8">
             <Bot className="w-10 h-10 text-muted-foreground/20" />
             <p className="text-sm text-muted-foreground">
-              {documentId
-                ? "Ask a question about this document"
-                : "Select a document to start chatting"}
+              Ask a question about this document
             </p>
-            {documentId && (
-              <div className="flex flex-wrap gap-1.5 mt-1 max-w-xs justify-center">
-                {prompts.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => {
-                      setInput(q);
-                      handleSend(q);
-                    }}
-                    className="text-[11px] px-2.5 py-1 rounded-full border border-border/50 text-muted-foreground hover:bg-muted/50 transition-colors"
+            <div className="flex flex-wrap gap-1.5 mt-1 max-w-xs justify-center">
+              {prompts.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => {
+                    setInput(q);
+                    handleSend(q);
+                  }}
+                  className="text-[11px] px-2.5 py-1 rounded-full border border-border/50 text-muted-foreground hover:bg-muted/50 transition-colors"
                   >
                     {q}
                   </button>
                 ))}
               </div>
-            )}
           </div>
         )}
 
@@ -232,14 +220,7 @@ export function AiChatPanel({
       )}
 
       {/* Input */}
-      {!documentId ? (
-        <div className="p-4 border-t border-border/50">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-3">
-            <FileText className="w-4 h-4 shrink-0" />
-            <span>Select a document to start chatting</span>
-          </div>
-        </div>
-      ) : limitReached ? (
+      {limitReached ? (
         <div className="p-4 border-t border-border/50">
           <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-4 py-3">
             <Lock className="w-4 h-4 shrink-0" />
