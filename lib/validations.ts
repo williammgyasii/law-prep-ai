@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const moduleSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
-  description: z.string().max(500).default(""),
-  order: z.number().int().min(0).default(0),
-  color: z.string().default("#4f46e5"),
-  icon: z.string().default("BookOpen"),
+  description: z.string().max(500).optional().default(""),
+  order: z.number().int().min(0).optional().default(0),
+  color: z.string().optional().default("#4f46e5"),
+  icon: z.string().optional().default("BookOpen"),
 });
 
 export const resourceSchema = z.object({
@@ -46,9 +46,9 @@ export const studyPlanSchema = z.object({
   minutesPerDay: z.number().int().min(15).max(480),
 });
 
-export type ModuleInput = z.infer<typeof moduleSchema>;
-export type ResourceInput = z.infer<typeof resourceSchema>;
-export type ProgressInput = z.infer<typeof progressSchema>;
-export type NoteInput = z.infer<typeof noteSchema>;
-export type WeakAreaInput = z.infer<typeof weakAreaSchema>;
-export type StudyPlanInput = z.infer<typeof studyPlanSchema>;
+export type ModuleInput = z.input<typeof moduleSchema>;
+export type ResourceInput = z.input<typeof resourceSchema>;
+export type ProgressInput = z.input<typeof progressSchema>;
+export type NoteInput = z.input<typeof noteSchema>;
+export type WeakAreaInput = z.input<typeof weakAreaSchema>;
+export type StudyPlanInput = z.input<typeof studyPlanSchema>;

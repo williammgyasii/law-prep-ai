@@ -4,6 +4,9 @@ export const RESOURCE_TYPES = [
   { value: "drill", label: "Drill", icon: "Target" },
   { value: "practice_test", label: "Practice Test", icon: "ClipboardList" },
   { value: "article", label: "Article", icon: "FileText" },
+  { value: "webinar", label: "Webinar", icon: "Video" },
+  { value: "podcast", label: "Podcast", icon: "Mic" },
+  { value: "course_module", label: "Course", icon: "GraduationCap" },
 ] as const;
 
 export const DIFFICULTIES = [
