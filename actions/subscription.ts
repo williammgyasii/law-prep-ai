@@ -5,6 +5,7 @@ import { users, subscriptions } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import { type Tier, TIERS, getUserTier, hasFeature, getLimit, type Feature } from "@/lib/subscription";
+import { revalidatePath } from "next/cache";
 
 export async function getCurrentSubscription() {
   const user = await getSessionUser();
@@ -31,6 +32,66 @@ export async function getCurrentSubscription() {
         }
       : null,
   };
+}
+
+export async function changePlan(newTier: Tier): Promise<{ success: boolean; error?: string }> {
+  const user = await getSessionUser();
+  const currentTier = await getUserTier(user.id!);
+
+  if (currentTier === newTier) {
+    return { success: false, error: "You are already on this plan." };
+  }
+
+  if (newTier !== "free" && newTier !== "pro" && newTier !== "premium") {
+    return { success: false, error: "Invalid plan." };
+  }
+
+  // TODO: Replace with Stripe checkout session creation.
+  // For now, directly update the user's tier to simulate the flow.
+  // When Stripe is integrated:
+  //   - "upgrade" -> create Stripe checkout session -> redirect to Stripe
+  //   - Stripe webhook -> update user tier + create subscription row
+  //   - "downgrade to free" -> cancel Stripe subscription -> webhook updates tier
+
+  await db
+    .update(users)
+    .set({ tier: newTier, updatedAt: new Date() })
+    .where(eq(users.id, user.id!));
+
+  if (newTier !== "free") {
+    const periodEnd = new Date();
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+    await db.insert(subscriptions).values({
+      userId: user.id!,
+      tier: newTier,
+      status: "active",
+      stripeSubscriptionId: `sim_${Date.now()}`,
+      stripePriceId: `price_sim_${newTier}`,
+      stripeCurrentPeriodStart: new Date(),
+      stripeCurrentPeriodEnd: periodEnd,
+    });
+  } else {
+    await db
+      .update(subscriptions)
+      .set({ status: "canceled", updatedAt: new Date() })
+      .where(
+        and(
+          eq(subscriptions.userId, user.id!),
+          eq(subscriptions.status, "active")
+        )
+      );
+  }
+
+  revalidatePath("/pricing");
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/modules");
+  revalidatePath("/practice");
+  revalidatePath("/writing");
+  revalidatePath("/learn");
+
+  return { success: true };
 }
 
 export async function checkFeatureAccess(feature: Feature): Promise<{ allowed: boolean; tier: Tier; requiredTier?: Tier }> {

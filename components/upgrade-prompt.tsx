@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Lock, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TIERS, type Tier } from "@/lib/subscription";
+import { TIERS, type Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
 interface UpgradePromptProps {

@@ -3,7 +3,7 @@ import { getWritingPrompts, getWritingStats, getWritingAttempts } from "@/action
 import { WritingHub } from "@/components/writing-hub";
 import { Badge } from "@/components/ui/badge";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
-import type { Tier } from "@/lib/subscription";
+import type { Tier } from "@/lib/tiers";
 
 export default async function WritingPage() {
   const [promptsResult, stats, attempts] = await Promise.all([

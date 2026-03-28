@@ -7,9 +7,16 @@ import { getUserTier, getLimit } from "@/lib/subscription";
 import path from "path";
 import { writeFile, mkdir } from "fs/promises";
 
+function logUploadError(stage: string, detail: Record<string, unknown>, err: unknown) {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error(`[upload] ${stage}`, { ...detail, error: message, stack });
+}
+
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
-  const pdfParse = (await import("pdf-parse")).default;
-  const data = await pdfParse(buffer);
+  const pdfParse = await import("pdf-parse");
+  const parse = typeof pdfParse === "function" ? pdfParse : (pdfParse as any).default ?? pdfParse;
+  const data = await parse(buffer);
   return data.text;
 }
 
@@ -24,7 +31,7 @@ async function extractTextFromURL(url: string): Promise<{ text: string; title: s
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0 (compatible; LawPrepAI/1.0)" },
   });
-  if (!res.ok) throw new Error(`Failed to fetch URL: ${res.status}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText} for ${url}`);
   const html = await res.text();
   const $ = cheerio.load(html);
 
@@ -36,6 +43,10 @@ async function extractTextFromURL(url: string): Promise<{ text: string; title: s
     .text()
     .replace(/\s+/g, " ")
     .trim();
+
+  if (!text || text.length < 10) {
+    throw new Error(`Extracted text too short (${text.length} chars) — page may be gated or empty`);
+  }
 
   return { text, title };
 }
@@ -88,9 +99,15 @@ export async function POST(req: NextRequest) {
         })
         .returning();
 
+      console.log(`[upload] URL success: "${title}" (${wordCount} words) from ${url}`);
       return NextResponse.json({ document: doc });
-    } catch {
-      return NextResponse.json({ error: "Failed to fetch and parse URL" }, { status: 400 });
+    } catch (err) {
+      logUploadError("URL extraction failed", { url, userId }, err);
+      const detail = err instanceof Error ? err.message : "Unknown error";
+      return NextResponse.json(
+        { error: `Failed to fetch and parse URL: ${detail}` },
+        { status: 400 }
+      );
     }
   }
 
@@ -116,13 +133,32 @@ export async function POST(req: NextRequest) {
       fileType = "text";
       extractedText = buffer.toString("utf-8");
     } else {
+      console.warn(`[upload] Unsupported extension: "${ext}" for file "${file.name}"`);
       return NextResponse.json(
-        { error: "Unsupported file type. Upload PDF, DOCX, TXT, or MD files." },
+        { error: `Unsupported file type "${ext}". Upload PDF, DOCX, TXT, or MD files.` },
         { status: 400 }
       );
     }
-  } catch {
-    return NextResponse.json({ error: "Failed to extract text from file" }, { status: 400 });
+  } catch (err) {
+    logUploadError("File text extraction failed", {
+      fileName: file.name,
+      ext,
+      fileSize: buffer.length,
+      userId,
+    }, err);
+    const detail = err instanceof Error ? err.message : "Unknown error";
+    return NextResponse.json(
+      { error: `Failed to extract text from ${ext.toUpperCase()} file: ${detail}` },
+      { status: 400 }
+    );
+  }
+
+  if (!extractedText || extractedText.trim().length === 0) {
+    console.warn(`[upload] Empty extraction for "${file.name}" (${buffer.length} bytes, ${ext})`);
+    return NextResponse.json(
+      { error: "File appears to be empty or could not be read. Try a different file." },
+      { status: 400 }
+    );
   }
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads", userId);
@@ -148,5 +184,6 @@ export async function POST(req: NextRequest) {
     })
     .returning();
 
+  console.log(`[upload] File success: "${title}" (${wordCount} words, ${ext}, ${buffer.length} bytes)`);
   return NextResponse.json({ document: doc });
 }

@@ -6,6 +6,7 @@ import {
   pgEnum,
   json,
   uniqueIndex,
+  index,
   primaryKey,
   boolean,
 } from "drizzle-orm/pg-core";
@@ -90,7 +91,9 @@ export const sessions = pgTable("sessions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expires: timestamp("expires", { mode: "date" }).notNull(),
-});
+}, (t) => [
+  index("idx_sessions_user").on(t.userId),
+]);
 
 export const verificationTokens = pgTable(
   "verification_tokens",
@@ -116,7 +119,9 @@ export const subscriptions = pgTable("subscriptions", {
   cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_subscriptions_user_status").on(t.userId, t.status),
+]);
 
 export const modules = pgTable("modules", {
   id: text("id").primaryKey().$defaultFn(createId),
@@ -151,7 +156,9 @@ export const resources = pgTable("resources", {
   duration: text("duration"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_resources_module").on(t.moduleId, t.order),
+]);
 
 export const progress = pgTable(
   "progress",
@@ -185,7 +192,9 @@ export const notes = pgTable("notes", {
   content: text("content").notNull().default(""),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_notes_user_resource").on(t.userId, t.resourceId),
+]);
 
 export const weakAreas = pgTable("weak_areas", {
   id: text("id").primaryKey().$defaultFn(createId),
@@ -198,7 +207,9 @@ export const weakAreas = pgTable("weak_areas", {
   moduleId: text("module_id").references(() => modules.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_weak_areas_user").on(t.userId),
+]);
 
 export const studyPlans = pgTable("study_plans", {
   id: text("id").primaryKey().$defaultFn(createId),
@@ -211,7 +222,9 @@ export const studyPlans = pgTable("study_plans", {
   generatedPlan: json("generated_plan").notNull().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_study_plans_user").on(t.userId, t.createdAt),
+]);
 
 export const documentTypeEnum = pgEnum("document_type", [
   "pdf",
@@ -239,7 +252,9 @@ export const documents = pgTable("documents", {
   flashcards: json("flashcards").$type<{ front: string; back: string }[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_documents_user_created").on(t.userId, t.createdAt),
+]);
 
 export const documentChats = pgTable("document_chats", {
   id: text("id").primaryKey().$defaultFn(createId),
@@ -252,7 +267,10 @@ export const documentChats = pgTable("document_chats", {
   role: chatRoleEnum("role").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_doc_chats_doc_user").on(t.documentId, t.userId, t.createdAt),
+  index("idx_doc_chats_doc_role").on(t.documentId, t.userId, t.role),
+]);
 
 export const lsatSectionTypeEnum = pgEnum("lsat_section_type", [
   "logical_reasoning",
@@ -273,7 +291,10 @@ export const practiceQuestions = pgTable("practice_questions", {
   source: text("source").notNull().default("agieval"),
   prepTestNumber: text("prep_test_number"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_pq_section_difficulty").on(t.sectionType, t.difficulty),
+  index("idx_pq_prep_test").on(t.prepTestNumber),
+]);
 
 export const questionAttempts = pgTable("question_attempts", {
   id: text("id").primaryKey().$defaultFn(createId),
@@ -287,7 +308,10 @@ export const questionAttempts = pgTable("question_attempts", {
   isCorrect: integer("is_correct").notNull(),
   timeSpentSeconds: integer("time_spent_seconds"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_attempts_user_created").on(t.userId, t.createdAt),
+  index("idx_attempts_user_question").on(t.userId, t.questionId),
+]);
 
 export interface WritingPerspective {
   label: string;
@@ -327,7 +351,9 @@ export const writingAttempts = pgTable("writing_attempts", {
   wordCount: integer("word_count").notNull().default(0),
   submittedAt: timestamp("submitted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("idx_writing_attempts_user").on(t.userId, t.createdAt),
+]);
 
 // ─── Relations ───────────────────────────────────────────
 

@@ -1,16 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { User, Key, Database, Info, Zap, BarChart3 } from "lucide-react";
+import { User, Key, Database, Info, Zap, BarChart3, CreditCard, ArrowRight } from "lucide-react";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import { getPracticeStats, getQuestionCounts } from "@/actions/practice";
+import { getCurrentSubscription } from "@/actions/subscription";
+import { TIERS } from "@/lib/tiers";
+import Link from "next/link";
 
 async function getSettingsData() {
   const sessionUser = await getSessionUser();
-  const [user, practiceStats, questionCounts, dbCheck] = await Promise.all([
+  const [user, practiceStats, questionCounts, dbCheck, sub] = await Promise.all([
     db.query.users.findFirst({ where: eq(users.id, sessionUser.id!) }),
     getPracticeStats(),
     getQuestionCounts(),
@@ -18,15 +22,17 @@ async function getSettingsData() {
       .execute(sql`SELECT 1`)
       .then(() => true)
       .catch(() => false),
+    getCurrentSubscription(),
   ]);
 
-  return { user, practiceStats, questionCounts, dbConnected: dbCheck };
+  return { user, practiceStats, questionCounts, dbConnected: dbCheck, sub };
 }
 
 export default async function SettingsPage() {
-  const { user, practiceStats, questionCounts, dbConnected } =
+  const { user, practiceStats, questionCounts, dbConnected, sub } =
     await getSettingsData();
   const hasApiKey = !!process.env.OPENAI_API_KEY;
+  const tierConfig = TIERS[sub.tier];
 
   return (
     <div className="space-y-6">
@@ -58,6 +64,66 @@ export default async function SettingsPage() {
             <span className="text-sm text-muted-foreground">User ID</span>
             <code className="text-xs bg-muted px-2 py-1 rounded">{user?.id || "N/A"}</code>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="w-4 h-4" />
+            Subscription
+          </CardTitle>
+          <CardDescription>Your current plan and billing</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Plan</span>
+            <Badge className={
+              sub.tier === "premium"
+                ? "bg-violet-100 text-violet-700 border-violet-200"
+                : sub.tier === "pro"
+                  ? "bg-blue-100 text-blue-700 border-blue-200"
+                  : "bg-zinc-100 text-zinc-700 border-zinc-200"
+            }>
+              {tierConfig.name}
+            </Badge>
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Price</span>
+            <span className="text-sm font-medium">
+              {tierConfig.monthlyPrice === 0 ? "Free" : `$${tierConfig.monthlyPrice}/mo`}
+            </span>
+          </div>
+          {sub.subscription && (
+            <>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                  {sub.subscription.status}
+                </Badge>
+              </div>
+              {sub.subscription.currentPeriodEnd && (
+                <>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Renews</span>
+                    <span className="text-sm font-medium">
+                      {new Date(sub.subscription.currentPeriodEnd).toLocaleDateString()}
+                    </span>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          <Separator />
+          <Button asChild variant="outline" className="w-full rounded-xl gap-1.5 text-sm">
+            <Link href="/pricing">
+              {sub.tier === "free" ? "Upgrade Plan" : "Manage Plan"}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Button>
         </CardContent>
       </Card>
 

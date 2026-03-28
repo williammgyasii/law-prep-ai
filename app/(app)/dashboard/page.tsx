@@ -24,6 +24,8 @@ import { Progress as ProgressBar } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DynamicIcon } from "@/components/icons";
+import { getUserTier } from "@/lib/subscription";
+import { TIERS, type Tier } from "@/lib/tiers";
 
 async function getDashboardData() {
   const sessionUser = await getSessionUser();
@@ -55,9 +57,12 @@ async function getDashboardData() {
     (moduleCompletionPct * 0.3) + (practiceAccuracy * 0.5) + (writingDone ? 20 : 0)
   );
 
+  const tier = await getUserTier(userId);
+
   return {
     userId,
     userName: user?.name || "there",
+    tier,
     modules: allModules,
     totalResources,
     completed,
@@ -108,9 +113,22 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* ── Header row ── */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight">Hey, {d.userName}</h2>
-          <p className="text-muted-foreground text-sm mt-0.5">Here&apos;s where you stand today.</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">Hey, {d.userName}</h2>
+            <p className="text-muted-foreground text-sm mt-0.5">Here&apos;s where you stand today.</p>
+          </div>
+          <Link href="/pricing">
+            <Badge className={
+              d.tier === "premium"
+                ? "bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-200"
+                : d.tier === "pro"
+                  ? "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200"
+                  : "bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-200"
+            }>
+              {TIERS[d.tier].name}
+            </Badge>
+          </Link>
         </div>
         <Button asChild size="sm" className="rounded-xl gap-1.5">
           <Link href="/practice">

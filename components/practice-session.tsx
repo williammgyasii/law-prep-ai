@@ -33,7 +33,7 @@ import {
 } from "@/actions/practice";
 import type { PracticeQuestion } from "@/db/schema";
 import { UpgradePrompt } from "@/components/upgrade-prompt";
-import type { Tier } from "@/lib/subscription";
+import type { Tier } from "@/lib/tiers";
 
 interface AttemptResult {
   questionId: string;

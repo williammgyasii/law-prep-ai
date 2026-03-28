@@ -45,3 +45,6 @@ next-env.d.ts
 
 # scraped data
 /scripts/data
+
+# user uploads
+/public/uploads

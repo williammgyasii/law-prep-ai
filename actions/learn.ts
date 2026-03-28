@@ -205,6 +205,66 @@ export async function generateFlashcards(docId: string) {
   }
 }
 
+export async function quizFromDocument(docId: string) {
+  const user = await getSessionUser();
+  const doc = await db.query.documents.findFirst({
+    where: and(eq(documents.id, docId), eq(documents.userId, user.id!)),
+  });
+  if (!doc) return { error: "Document not found" };
+
+  const context = truncateText(doc.extractedText);
+
+  if (!process.env.OPENAI_API_KEY) {
+    return {
+      questions: [
+        {
+          question: "What is the main argument presented in this document?",
+          options: ["Option A", "Option B", "Option C", "Option D"],
+          correctIndex: 0,
+        },
+        {
+          question: "Which legal principle is most relevant to this text?",
+          options: ["Due process", "Equal protection", "Free speech", "Commerce clause"],
+          correctIndex: 1,
+        },
+      ],
+    };
+  }
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          'You are a legal study assistant. Generate 4-5 multiple choice quiz questions from the document to test comprehension. Return ONLY a JSON array of objects with "question" (string), "options" (array of 4 strings), and "correctIndex" (0-based index of the correct option). No other text.',
+      },
+      { role: "user", content: context },
+    ],
+    max_tokens: 1000,
+  });
+
+  try {
+    const raw = response.choices[0]?.message?.content || "[]";
+    const questions = JSON.parse(raw) as {
+      question: string;
+      options: string[];
+      correctIndex: number;
+    }[];
+    return { questions };
+  } catch {
+    return {
+      questions: [
+        {
+          question: "Failed to generate quiz. Please try again.",
+          options: ["Retry"],
+          correctIndex: 0,
+        },
+      ],
+    };
+  }
+}
+
 export async function chatWithDocument(docId: string, message: string) {
   const user = await getSessionUser();
   const tier = await getUserTier(user.id!);
