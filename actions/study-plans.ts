@@ -3,13 +3,14 @@
 import { db } from "@/db";
 import { studyPlans, modules, resources } from "@/db/schema";
 import { eq, desc, count, asc } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { generateStudyPlan } from "@/lib/openai";
 import { revalidatePath } from "next/cache";
 
 export async function getStudyPlans() {
+  const user = await getSessionUser();
   return db.query.studyPlans.findMany({
-    where: eq(studyPlans.userId, MOCK_USER_ID),
+    where: eq(studyPlans.userId, user.id!),
     orderBy: [desc(studyPlans.createdAt)],
   });
 }
@@ -20,6 +21,13 @@ export async function createStudyPlan(input: {
   availableDays: string[];
   minutesPerDay: number;
 }) {
+  const { checkFeatureAccess } = await import("@/actions/subscription");
+  const access = await checkFeatureAccess("ai_study_plans");
+  if (!access.allowed) {
+    throw new Error("AI Study Plans require the Premium plan. Visit /pricing to upgrade.");
+  }
+
+  const user = await getSessionUser();
   const allModules = await db
     .select({ title: modules.title })
     .from(modules)
@@ -38,7 +46,7 @@ export async function createStudyPlan(input: {
   const [studyPlan] = await db
     .insert(studyPlans)
     .values({
-      userId: MOCK_USER_ID,
+      userId: user.id!,
       title: input.title,
       examDate: input.examDate ? new Date(input.examDate) : null,
       preferences: {

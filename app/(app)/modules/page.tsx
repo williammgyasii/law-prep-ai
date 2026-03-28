@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { Plus, ArrowRight, BookOpen } from "lucide-react";
+import { Plus, ArrowRight, BookOpen, Lock } from "lucide-react";
 import { db } from "@/db";
 import { modules } from "@/db/schema";
 import { asc } from "drizzle-orm";
 import { getProgressPercentage } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
+import { getUserTier, getLimit, type Tier } from "@/lib/subscription";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DynamicIcon } from "@/components/icons";
 import { EmptyState } from "@/components/empty-state";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 async function getModulesData() {
   return db.query.modules.findMany({
@@ -23,6 +26,9 @@ async function getModulesData() {
 }
 
 export default async function ModulesPage() {
+  const user = await getSessionUser();
+  const tier = await getUserTier(user.id!);
+  const modulesLimit = getLimit(tier, "modulesAccess");
   const allModules = await getModulesData();
 
   if (allModules.length === 0) {
@@ -60,16 +66,61 @@ export default async function ModulesPage() {
         </Button>
       </div>
 
+      {modulesLimit !== -1 && allModules.length > modulesLimit && (
+        <UpgradePrompt
+          feature="Unlock All Modules"
+          description={`Your plan includes ${modulesLimit} modules. Upgrade to access all ${allModules.length}.`}
+          currentTier={tier}
+          compact
+        />
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {allModules.map((mod) => {
+        {allModules.map((mod, idx) => {
           const total = mod.resources.length;
           const done = mod.resources.filter((r) =>
-            r.progress.some((p) => p.status === "completed")
+            r.progress.some((p) => p.userId === user.id && p.status === "completed")
           ).length;
           const inProg = mod.resources.filter((r) =>
-            r.progress.some((p) => p.status === "in_progress")
+            r.progress.some((p) => p.userId === user.id && p.status === "in_progress")
           ).length;
           const pct = getProgressPercentage(done, total);
+          const isLocked = modulesLimit !== -1 && idx >= modulesLimit;
+
+          if (isLocked) {
+            return (
+              <div key={mod.id} className="relative">
+                <Card className="h-full border-border/60 overflow-hidden opacity-60">
+                  <div
+                    className="h-1.5 w-full"
+                    style={{ background: `linear-gradient(90deg, ${mod.color}, ${mod.color}88)` }}
+                  />
+                  <CardContent className="p-5 pt-4">
+                    <div className="flex items-start justify-between mb-4">
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: mod.color + "15", color: mod.color }}
+                      >
+                        <DynamicIcon name={mod.icon} className="w-5 h-5" />
+                      </div>
+                      <Lock className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                    <h3 className="font-semibold text-[15px] mb-1">{mod.title}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4 leading-relaxed">{mod.description}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-[10px] font-medium">
+                        {total} resources
+                      </Badge>
+                      <Badge variant="secondary" className="text-[10px] font-medium">
+                        <Lock className="w-2.5 h-2.5 mr-0.5" />
+                        Pro
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          }
 
           return (
             <Link key={mod.id} href={`/modules/${mod.id}`} className="group">

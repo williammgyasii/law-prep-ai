@@ -12,6 +12,11 @@ import {
   GraduationCap,
   ChevronLeft,
   ChevronRight,
+  Zap,
+  Library,
+  PenLine,
+  CreditCard,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,12 +24,17 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/modules", label: "Modules", icon: BookOpen },
+  { href: "/practice", label: "Practice", icon: Zap },
+  { href: "/writing", label: "LSAT Writing", icon: PenLine },
+  { href: "/lsat-prep", label: "LSAT Prep", icon: Library },
+  { href: "/modules", label: "LSAT Modules", icon: BookOpen },
+  { href: "/learn", label: "Learning Hub", icon: FolderOpen },
   { href: "/planner", label: "Study Planner", icon: Calendar },
   { href: "/weak-areas", label: "Weak Areas", icon: AlertTriangle },
 ];
 
 const bottomItems = [
+  { href: "/pricing", label: "Pricing", icon: CreditCard },
   { href: "/admin", label: "Admin", icon: Shield },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

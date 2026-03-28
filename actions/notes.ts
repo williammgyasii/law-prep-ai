@@ -3,26 +3,29 @@
 import { db } from "@/db";
 import { notes } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getNotesForResource(resourceId: string) {
+  const user = await getSessionUser();
   return db.query.notes.findMany({
-    where: and(eq(notes.userId, MOCK_USER_ID), eq(notes.resourceId, resourceId)),
+    where: and(eq(notes.userId, user.id!), eq(notes.resourceId, resourceId)),
     orderBy: [desc(notes.updatedAt)],
   });
 }
 
 export async function getNote(resourceId: string) {
+  const user = await getSessionUser();
   return db.query.notes.findFirst({
-    where: and(eq(notes.userId, MOCK_USER_ID), eq(notes.resourceId, resourceId)),
+    where: and(eq(notes.userId, user.id!), eq(notes.resourceId, resourceId)),
   });
 }
 
 export async function createNote(resourceId: string, title: string) {
+  const user = await getSessionUser();
   const [created] = await db
     .insert(notes)
-    .values({ userId: MOCK_USER_ID, resourceId, title, content: "" })
+    .values({ userId: user.id!, resourceId, title, content: "" })
     .returning();
 
   revalidatePath(`/resources/${resourceId}`);
@@ -30,7 +33,8 @@ export async function createNote(resourceId: string, title: string) {
 }
 
 export async function saveNote(resourceId: string, content: string) {
-  const userId = MOCK_USER_ID;
+  const user = await getSessionUser();
+  const userId = user.id!;
 
   const existing = await db.query.notes.findFirst({
     where: and(eq(notes.userId, userId), eq(notes.resourceId, resourceId)),

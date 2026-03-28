@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { progress, resources } from "@/db/schema";
 import { eq, and, count } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function updateProgress(
@@ -12,7 +12,8 @@ export async function updateProgress(
   confidenceScore?: number,
   timeSpentMinutes?: number
 ) {
-  const userId = MOCK_USER_ID;
+  const user = await getSessionUser();
+  const userId = user.id!;
 
   const existing = await db.query.progress.findFirst({
     where: and(eq(progress.userId, userId), eq(progress.resourceId, resourceId)),
@@ -54,7 +55,8 @@ export async function updateProgress(
 }
 
 export async function ensureInProgress(resourceId: string) {
-  const userId = MOCK_USER_ID;
+  const user = await getSessionUser();
+  const userId = user.id!;
 
   const existing = await db.query.progress.findFirst({
     where: and(eq(progress.userId, userId), eq(progress.resourceId, resourceId)),
@@ -82,7 +84,8 @@ export async function ensureInProgress(resourceId: string) {
 }
 
 export async function getProgressStats() {
-  const userId = MOCK_USER_ID;
+  const user = await getSessionUser();
+  const userId = user.id!;
 
   const [totalResult] = await db.select({ value: count() }).from(resources);
   const total = totalResult?.value ?? 0;

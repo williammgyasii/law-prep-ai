@@ -39,10 +39,19 @@ export interface ScrapedPodcast {
   duration: string | null;
 }
 
+export interface LSATPrepItem {
+  title: string;
+  url: string;
+  category: "full_test" | "drill_set" | "lesson" | "additional_practice";
+  sectionType: "logical_reasoning" | "reading_comprehension" | "analytical_reasoning" | "mixed" | "argumentative_writing" | null;
+  prepTestNumber: string | null;
+}
+
 export interface ScrapeResult {
   articles: ScrapedArticle[];
   courses: ScrapedCourse[];
   webinars: ScrapedWebinar[];
   podcasts: ScrapedPodcast[];
+  lsatPrep: LSATPrepItem[];
   scrapedAt: string;
 }

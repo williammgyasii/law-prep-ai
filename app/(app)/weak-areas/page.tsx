@@ -1,16 +1,17 @@
 import { db } from "@/db";
 import { weakAreas, modules } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { AlertTriangle } from "lucide-react";
 import { WeakAreaForm } from "@/components/weak-area-form";
 import { WeakAreaCard } from "@/components/weak-area-card";
 import { EmptyState } from "@/components/empty-state";
 
 async function getData() {
+  const sessionUser = await getSessionUser();
   const [userWeakAreas, allModules] = await Promise.all([
     db.query.weakAreas.findMany({
-      where: eq(weakAreas.userId, MOCK_USER_ID),
+      where: eq(weakAreas.userId, sessionUser.id!),
       with: { module: true },
       orderBy: [asc(weakAreas.confidenceScore)],
     }),

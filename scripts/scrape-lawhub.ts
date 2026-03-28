@@ -5,6 +5,7 @@ import { scrapeArticles } from "./scrapers/articles.js";
 import { scrapeCourses } from "./scrapers/courses.js";
 import { scrapeWebinars } from "./scrapers/webinars.js";
 import { scrapePodcasts } from "./scrapers/podcasts.js";
+import { scrapeLSATPrep } from "./scrapers/lsat-prep.js";
 import type { ScrapeResult } from "./lib/types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -45,11 +46,19 @@ async function main() {
   );
   console.log(`Wrote ${podcasts.length} podcasts to scripts/data/podcasts.json`);
 
+  const lsatPrep = await scrapeLSATPrep();
+  writeFileSync(
+    join(DATA_DIR, "lsat-prep.json"),
+    JSON.stringify(lsatPrep, null, 2)
+  );
+  console.log(`Wrote ${lsatPrep.length} LSAT prep items to scripts/data/lsat-prep.json`);
+
   const result: ScrapeResult = {
     articles,
     courses,
     webinars,
     podcasts,
+    lsatPrep,
     scrapedAt: new Date().toISOString(),
   };
   writeFileSync(
@@ -59,11 +68,12 @@ async function main() {
 
   console.log("\n" + "=".repeat(50));
   console.log("Scrape Summary:");
-  console.log(`  Articles:  ${articles.length}`);
-  console.log(`  Courses:   ${courses.length}`);
-  console.log(`  Webinars:  ${webinars.length}`);
-  console.log(`  Podcasts:  ${podcasts.length}`);
-  console.log(`  Total:     ${articles.length + courses.length + webinars.length + podcasts.length}`);
+  console.log(`  Articles:   ${articles.length}`);
+  console.log(`  Courses:    ${courses.length}`);
+  console.log(`  Webinars:   ${webinars.length}`);
+  console.log(`  Podcasts:   ${podcasts.length}`);
+  console.log(`  LSAT Prep:  ${lsatPrep.length}`);
+  console.log(`  Total:      ${articles.length + courses.length + webinars.length + podcasts.length + lsatPrep.length}`);
   console.log(`\nAll data written to scripts/data/`);
   console.log(`Finished at: ${new Date().toISOString()}`);
 }

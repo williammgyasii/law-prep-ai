@@ -24,5 +24,3 @@ export function getProgressPercentage(completed: number, total: number) {
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
 }
-
-export const MOCK_USER_ID = "user_default";

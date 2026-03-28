@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, Clock, ListOrdered, ChevronRight, ChevronLeft, Play, MonitorPlay } from "lucide-react";
+import { ArrowLeft, ExternalLink, Clock, ListOrdered, ChevronRight, ChevronLeft, Play, MonitorPlay, Zap } from "lucide-react";
 import { db } from "@/db";
 import { resources, notes } from "@/db/schema";
 import { eq, and, gt, lt, asc, desc } from "drizzle-orm";
-import { MOCK_USER_ID, formatMinutes } from "@/lib/utils";
+import { formatMinutes } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +25,9 @@ async function getResourceData(id: string) {
   });
 }
 
-async function getNotesForResource(resourceId: string) {
+async function getNotesForResource(resourceId: string, userId: string) {
   return db.query.notes.findMany({
-    where: and(eq(notes.userId, MOCK_USER_ID), eq(notes.resourceId, resourceId)),
+    where: and(eq(notes.userId, userId), eq(notes.resourceId, resourceId)),
     orderBy: [desc(notes.updatedAt)],
   });
 }
@@ -89,10 +90,11 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
 
   if (!resource) notFound();
 
-  const userProgress = resource.progress.find((p) => p.userId === MOCK_USER_ID);
+  const sessionUser = await getSessionUser();
+  const userProgress = resource.progress.find((p) => p.userId === sessionUser.id);
   const status = userProgress?.status || "not_started";
   const [userNotes, { prev: prevResource, next: nextResource }] = await Promise.all([
-    getNotesForResource(id),
+    getNotesForResource(id, sessionUser.id!),
     getAdjacentResources(resource.moduleId, resource.order),
   ]);
 
@@ -155,14 +157,22 @@ export default async function ResourceDetailPage({ params }: { params: Promise<{
           <Card className="border-border/60">
             <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
               <ResourceProgressControls resourceId={resource.id} currentStatus={status} />
-              {resource.url && (
+              <div className="flex items-center gap-2">
                 <Button asChild variant="outline" size="sm" className="rounded-xl">
-                  <a href={resource.url} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    {resource.type === "video" ? "Watch on LawHub" : "Open on LawHub"}
-                  </a>
+                  <Link href={`/practice`}>
+                    <Zap className="w-3.5 h-3.5" />
+                    Practice Questions
+                  </Link>
                 </Button>
-              )}
+                {resource.url && (
+                  <Button asChild variant="outline" size="sm" className="rounded-xl">
+                    <a href={resource.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      {resource.type === "video" ? "Watch on LawHub" : "Open on LawHub"}
+                    </a>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 

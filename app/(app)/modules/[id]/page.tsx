@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { modules, resources } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { formatMinutes, getProgressPercentage } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,9 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
 
   if (!mod) notFound();
 
+  const user = await getSessionUser();
   const total = mod.resources.length;
-  const done = mod.resources.filter((r) => r.progress.some((p) => p.status === "completed")).length;
+  const done = mod.resources.filter((r) => r.progress.some((p) => p.userId === user.id && p.status === "completed")).length;
   const pct = getProgressPercentage(done, total);
 
   return (
@@ -86,7 +88,8 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
       ) : (
         <div className="space-y-2">
           {mod.resources.map((resource, index) => {
-            const status = resource.progress[0]?.status || "not_started";
+            const userProgress = resource.progress.find((p) => p.userId === user.id);
+            const status = userProgress?.status || "not_started";
             const hasNotes = resource.notes.length > 0 && resource.notes[0].content.length > 0;
 
             return (

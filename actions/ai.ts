@@ -4,7 +4,7 @@ import { summarizeNotes, explainSimply, generateQuiz, suggestNextLesson } from "
 import { db } from "@/db";
 import { progress, weakAreas, resources } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
@@ -14,10 +14,20 @@ export async function aiSummarize(notes: string) {
 }
 
 export async function aiExplain(title: string, notes: string, tags: string[]) {
+  const { checkFeatureAccess } = await import("@/actions/subscription");
+  const access = await checkFeatureAccess("ai_explanations");
+  if (!access.allowed) {
+    return `This feature requires the ${access.requiredTier === "pro" ? "Pro" : "Premium"} plan. Visit /pricing to upgrade.`;
+  }
   return explainSimply(title, notes, tags);
 }
 
 export async function aiQuiz(title: string, type: string, notes: string, tags: string[]) {
+  const { checkFeatureAccess } = await import("@/actions/subscription");
+  const access = await checkFeatureAccess("ai_explanations");
+  if (!access.allowed) {
+    return `This feature requires the ${access.requiredTier === "pro" ? "Pro" : "Premium"} plan. Visit /pricing to upgrade.`;
+  }
   return generateQuiz(title, type, notes, tags);
 }
 
@@ -52,8 +62,15 @@ Help them understand concepts, answer questions, and provide study guidance. Be 
   return response.choices[0]?.message?.content || "I couldn't generate a response. Please try again.";
 }
 
-export async function aiSuggestNext() {
-  const userId = MOCK_USER_ID;
+export async function aiSuggestNext(): Promise<string> {
+  const { checkFeatureAccess } = await import("@/actions/subscription");
+  const access = await checkFeatureAccess("ai_explanations");
+  if (!access.allowed) {
+    return "AI suggestions require the Pro plan or above. Visit /pricing to upgrade.";
+  }
+
+  const user = await getSessionUser();
+  const userId = user.id!;
 
   const completedProgress = await db.query.progress.findMany({
     where: and(eq(progress.userId, userId), eq(progress.status, "completed")),
@@ -71,7 +88,7 @@ export async function aiSuggestNext() {
   const completedTitles = completedProgress.map((p) => p.resource.title);
   const weakAreaTitles = userWeakAreas.map((w) => w.title);
   const availableTitles = allResources
-    .filter((r) => !r.progress.some((p) => p.status === "completed"))
+    .filter((r) => !r.progress.some((p) => p.userId === userId && p.status === "completed"))
     .map((r) => r.title);
 
   return suggestNextLesson(completedTitles, weakAreaTitles, availableTitles);

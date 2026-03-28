@@ -3,12 +3,13 @@
 import { db } from "@/db";
 import { weakAreas } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
-import { MOCK_USER_ID } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getWeakAreas() {
+  const user = await getSessionUser();
   return db.query.weakAreas.findMany({
-    where: eq(weakAreas.userId, MOCK_USER_ID),
+    where: eq(weakAreas.userId, user.id!),
     with: { module: true },
     orderBy: [asc(weakAreas.confidenceScore)],
   });
@@ -20,10 +21,11 @@ export async function createWeakArea(input: {
   confidenceScore?: number;
   moduleId?: string;
 }) {
+  const user = await getSessionUser();
   const [wa] = await db
     .insert(weakAreas)
     .values({
-      userId: MOCK_USER_ID,
+      userId: user.id!,
       title: input.title,
       description: input.description ?? "",
       confidenceScore: input.confidenceScore ?? 1,

@@ -1,7 +1,8 @@
 import { db } from "@/db";
 import { studyPlans } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { MOCK_USER_ID, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { getSessionUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Sparkles } from "lucide-react";
@@ -10,8 +11,9 @@ import { EmptyState } from "@/components/empty-state";
 import { DeletePlanButton } from "@/components/delete-plan-button";
 
 async function getPlans() {
+  const user = await getSessionUser();
   return db.query.studyPlans.findMany({
-    where: eq(studyPlans.userId, MOCK_USER_ID),
+    where: eq(studyPlans.userId, user.id!),
     orderBy: [desc(studyPlans.createdAt)],
   });
 }

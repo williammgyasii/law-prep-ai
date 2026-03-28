@@ -1,9 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Key, Database, Info } from "lucide-react";
+import { User, Key, Database, Info, Zap, BarChart3 } from "lucide-react";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { getSessionUser } from "@/lib/auth";
+import { getPracticeStats, getQuestionCounts } from "@/actions/practice";
 
-export default function SettingsPage() {
+async function getSettingsData() {
+  const sessionUser = await getSessionUser();
+  const [user, practiceStats, questionCounts, dbCheck] = await Promise.all([
+    db.query.users.findFirst({ where: eq(users.id, sessionUser.id!) }),
+    getPracticeStats(),
+    getQuestionCounts(),
+    db
+      .execute(sql`SELECT 1`)
+      .then(() => true)
+      .catch(() => false),
+  ]);
+
+  return { user, practiceStats, questionCounts, dbConnected: dbCheck };
+}
+
+export default async function SettingsPage() {
+  const { user, practiceStats, questionCounts, dbConnected } =
+    await getSettingsData();
   const hasApiKey = !!process.env.OPENAI_API_KEY;
 
   return (
@@ -24,20 +46,76 @@ export default function SettingsPage() {
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Name</span>
-            <span className="text-sm font-medium">Sarah</span>
+            <span className="text-sm font-medium">{user?.name || "Unknown"}</span>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Email</span>
-            <span className="text-sm font-medium">sarah@example.com</span>
+            <span className="text-sm font-medium">{user?.email || "Not set"}</span>
           </div>
           <Separator />
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">User ID</span>
-            <code className="text-xs bg-muted px-2 py-1 rounded">user_default</code>
+            <code className="text-xs bg-muted px-2 py-1 rounded">{user?.id || "N/A"}</code>
           </div>
         </CardContent>
       </Card>
+
+      {(practiceStats.totalAttempted > 0 || questionCounts.total > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Zap className="w-4 h-4" />
+              Practice Stats
+            </CardTitle>
+            <CardDescription>Your LSAT practice performance</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Questions in database</span>
+              <span className="text-sm font-medium tabular-nums">{questionCounts.total}</span>
+            </div>
+            <Separator />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Questions attempted</span>
+              <span className="text-sm font-medium tabular-nums">{practiceStats.totalAttempted}</span>
+            </div>
+            {practiceStats.totalAttempted > 0 && (
+              <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Overall accuracy</span>
+                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                    {practiceStats.accuracy}%
+                  </Badge>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Recent accuracy (last 20)</span>
+                  <span className="text-sm font-medium tabular-nums">{practiceStats.recentAccuracy}%</span>
+                </div>
+                <Separator />
+                <div className="space-y-2 pt-1">
+                  <span className="text-sm text-muted-foreground">By section:</span>
+                  {Object.entries(practiceStats.bySection).map(([section, data]) => (
+                    <div key={section} className="flex items-center justify-between text-sm pl-2">
+                      <span className="text-muted-foreground capitalize">
+                        {section.replace(/_/g, " ")}
+                      </span>
+                      <span className="tabular-nums">
+                        {data.correct}/{data.attempted}{" "}
+                        {data.attempted > 0 && (
+                          <span className="text-muted-foreground">({data.accuracy}%)</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -81,7 +159,11 @@ export default function SettingsPage() {
         <CardContent>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Status</span>
-            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Connected</Badge>
+            {dbConnected ? (
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Connected</Badge>
+            ) : (
+              <Badge variant="destructive">Disconnected</Badge>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -101,13 +183,13 @@ export default function SettingsPage() {
           <Separator />
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Purpose</span>
-            <span className="text-sm">Personal LSAT Study Organizer</span>
+            <span className="text-sm">LSAT Prep Platform</span>
           </div>
           <Separator />
           <p className="text-xs text-muted-foreground">
-            This app helps organize LSAT prep resources into a structured learning experience.
-            It does not scrape, copy, or rehost copyrighted LawHub/LSAC content. All content is
-            manually curated by the user. AI features use user-authored notes and metadata only.
+            LawPrep AI helps you prepare for the LSAT with structured learning modules,
+            6,400+ real practice questions from public research datasets, timed argumentative
+            writing practice, and AI-powered study guidance.
           </p>
         </CardContent>
       </Card>
